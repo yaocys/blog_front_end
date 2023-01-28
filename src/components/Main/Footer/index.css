@@ -1,0 +1,19 @@
+#footer{
+    text-align: center;
+    font-size: smaller;
+    margin-top: 2em;
+    margin-bottom: 3em;
+}
+
+.icon-link{
+    display: inline-block;
+    margin: 1em;
+}
+
+.icon-link:hover{
+    transform: scale(1.15,1.15);
+}
+
+#footer>a{
+    color: #b2bec3;
+}

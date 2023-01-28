@@ -1,0 +1,34 @@
+.tag{
+    line-height: 1.5;
+    font-weight: bolder;
+    color: #2d3436;
+    user-select: none;
+    margin-right: 0.5em;
+}
+
+.cross{
+    background-color: #ff7675;
+    border-radius: 12px;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+}
+
+.cross2{
+    height: 17px;
+    width: 17px;
+    margin: 0;
+    padding: 0;
+    font-size: unset;
+    line-height: 1;
+    border-radius: 10px;
+    background-color: unset;
+    color: #2d3436;
+    border: 0;
+    display: inline-block;
+    vertical-align: unset;
+}
+
+.cross2:hover{
+    background-color: #ff7675;
+}

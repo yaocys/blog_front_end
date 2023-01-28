@@ -1,0 +1,10 @@
+#main {
+    margin-top: calc(8vh);
+    letter-spacing: 1px;
+    padding-left: 2em;
+}
+
+#content {
+    box-shadow: 0 0 3px 1px rgba(45, 52, 54, 0.1);
+    padding: 0.5em 1em;
+}

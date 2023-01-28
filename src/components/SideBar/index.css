@@ -1,0 +1,22 @@
+#side-bar {
+    height: calc(100vh);
+    /*    min-width: 165px;*/
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding-top: calc(8vh);
+}
+
+.nav-tag[class*="active"] > i {
+    font-weight: bold;
+    border-bottom: gold 0.2em solid;
+}
+
+.nav-tag {
+    font-weight: bolder;
+    letter-spacing: 3px;
+}
+
+.nav-tag:hover {
+    text-decoration: none;
+}

@@ -1,0 +1,12 @@
+table{
+    font-variant-numeric: tabular-nums;
+    border: 0;
+}
+
+td{
+    border: 0;
+}
+
+td>button{
+    margin: 0 0.5em;
+}

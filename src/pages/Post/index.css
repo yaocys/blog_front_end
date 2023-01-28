@@ -1,0 +1,14 @@
+#essay a{
+    border-bottom: 1px solid #00b894;
+}
+
+#essay a:hover {
+    border-bottom-color: #555;
+    color: #555;
+    text-decoration: none;
+}
+
+#essay {
+    font-size: 16px;
+    font-weight: normal;
+}
