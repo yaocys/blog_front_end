@@ -56,7 +56,6 @@ function TimeLine() {
         }
         return {...essay, showDate: false};
     })
-
     return (
         <table className="table" frame="void" rules="none">
             <tbody>

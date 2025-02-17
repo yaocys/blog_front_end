@@ -37,8 +37,8 @@ function Post() {
                 <tr>
                     <td className="border-danger-subtle display-6 border-bottom border-2 fw-bolder">{essay && essay.title}</td>
                     <td style={{fontSize: "small", textAlign: "end"}} className="border-bottom border-success-subtle border-2">
-                        <div>{moment(essay && essay.createTime).format("YYYY-MM-DD")}</div>
-                        <div>浏览量:106</div>
+                        <div><i className="bi bi-calendar-event"/>&nbsp;{moment(essay && essay.createTime).format("YYYY-MM-DD")}</div>
+                        <div><i className="bi bi-eye"></i>&nbsp;浏览量:{essay && essay.views}</div>
                     </td>
                 </tr>
                 </tbody>
