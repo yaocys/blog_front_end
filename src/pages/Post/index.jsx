@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import moment from 'moment';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkFlexibleMarkers from 'remark-flexible-markers'
 import {Prism as SyntaxHighlighter} from "react-syntax-highlighter"
 import pangu from 'pangu';
 // import rehypeReact from 'rehype-react'
@@ -47,7 +48,7 @@ function Post() {
             <div className="markdown-body" id="essay">
                 <ReactMarkdown
                     children={essay && essay.content}
-                    remarkPlugins={[remarkGfm]}
+                    remarkPlugins={[remarkGfm, remarkFlexibleMarkers]}
                     components={{
                         code({node, inline, className, children, ...props}) {
                             const match = /language-(\w+)/.exec(className || '')

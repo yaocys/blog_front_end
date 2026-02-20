@@ -16,3 +16,10 @@
 img{
     max-width: 100%;
 }
+
+mark {
+    background-color: #ffeaa7;
+    color: inherit;
+    padding: 0 3px;
+    border-radius: 2px;
+}
