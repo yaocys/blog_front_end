@@ -40,6 +40,9 @@ const Editor = () => {
                     style: 'github',
                     lineNumber: true
                 },
+                markdown: {
+                    mark: true
+                },
                 actions: []
             },
             upload: {
@@ -49,7 +52,7 @@ const Editor = () => {
                 url: 'https://essay-pic-1311669082.cos.ap-chengdu.myqcloud.com',
                 linkToImgUrl: '',
                 filename(name: string): string {
-                    return name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5\.)]/g, '').replace(/[\?\\/:|<>\*\[\]\(\)\$%\{\}@~]/g, '').replace('/\\s/g', '')
+                    return name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '').replace(/[?\\/:|<>*\[\]()$%{}@~]/g, '').replace('/\\s/g', '')
                 },
                 success(editor: HTMLPreElement, msg: string) {
                     vditor.insertValue(`![${JSON.parse(msg).data.name}](${JSON.parse(msg).data.url})`)
