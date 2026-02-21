@@ -166,7 +166,7 @@ const Editor = () => {
                 <form className="d-flex">
                     <input className="form-control me-2" type="text" placeholder="文章标题" aria-label="Title"
                            ref={titleRef}/>
-                    <button className="btn btn-outline-info btn-sm me-1 text-nowrap" type="submit"
+                    <button className="btn btn-outline-info btn-sm me-1 text-nowrap" type="button"
                             onClick={() => Release(titleRef.current as any, vditor as Vditor)}>
                         {id ? '更新' : '发布'}
                     </button>

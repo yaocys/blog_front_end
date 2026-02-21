@@ -5,6 +5,15 @@ import {Link, NavLink} from "react-router-dom";
 
 function NavBar(props: { navTags: Array<any>; }){
     const {navTags} = props;
+
+    const closeNavbar = () => {
+        const el = document.getElementById('navbarSupportedContent');
+        if (el) {
+            const collapse = (window as any).bootstrap?.Collapse?.getInstance(el);
+            collapse?.hide();
+        }
+    };
+
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light sticky-top" id="navbar">
             <div className="container-md">
@@ -28,7 +37,7 @@ function NavBar(props: { navTags: Array<any>; }){
                             navTags.map((navTag) => {
                                 return (
                                     <li className="nav-item" key={navTag.id}>
-                                        <NavLink className="nav-link" to={navTag.link}>{navTag.label}</NavLink>
+                                        <NavLink className="nav-link" to={navTag.link} onClick={closeNavbar}>{navTag.label}</NavLink>
                                     </li>
                                 )
                             })
