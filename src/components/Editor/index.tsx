@@ -15,6 +15,16 @@ const cos = new COS({
 
 const Editor = () => {
     const [vditor, setVditor] = useState<Vditor>();
+    const navigate = useNavigate();
+
+    // 挂载时检查是否已通过 TOTP 认证，未认证则跳转到验证页
+    useEffect(() => {
+        fetch('/api1/auth/check', {credentials: 'include'})
+            .then(r => {
+                if (!r.ok) navigate('/auth', {replace: true});
+            })
+            .catch(() => navigate('/auth', {replace: true}));
+    }, [navigate]);
 
     useEffect(() => {
         // 配置Vditor编辑器
@@ -62,18 +72,17 @@ const Editor = () => {
     }, []);
 
     const titleRef = useRef(null);
-    const useNavigate1 = useNavigate();
 
-    const Release = (title: any, vditor: Vditor) => {
+    const Release = async (title: any, vditor: Vditor) => {
         // 参数校验
         if (title === null) {
             alert('标题不能为空！');
-            throw new Error('文章标题为空');
+            return;
         }
         const md = vditor.getValue();
         if (md === null || md.length === 0) {
-            alert("文本内容为空！")
-            throw new Error('请求MD文本为空');
+            alert("文本内容为空！");
+            return;
         }
 
         // 准备发送给后端的对象
@@ -82,30 +91,31 @@ const Editor = () => {
             content: md,
         }
 
-        // 像后端发送保存文章的请求
-        fetch('http://localhost:3000/api1/essay/saveEssay', {
+        // 向后端发送保存文章的请求，携带认证 Cookie
+        const response = await fetch('/api1/essay/saveEssay', {
             method: 'POST',
-            mode: 'cors',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(essay)
-        }).then(
-            response => {
-                console.log(response);
-                vditor.clearCache();
-                vditor.setValue('');
-            },
-            error => {
-                console.log('提交文章失败', error)
-            }
-        )
-
-        // TODO 这里改成更优雅的通知组件
-        alert('发布文章成功');
-        useNavigate1('/essay', {
-            replace: true,
         });
+
+        if (response.status === 401) {
+            alert('登录已过期，请重新验证');
+            navigate('/auth', {replace: true});
+            return;
+        }
+
+        if (!response.ok) {
+            alert('发布失败，请稍后重试');
+            return;
+        }
+
+        vditor.clearCache();
+        vditor.setValue('');
+        alert('发布文章成功');
+        navigate('/essay', {replace: true});
     }
 
     return (

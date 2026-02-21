@@ -1,0 +1,101 @@
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.auth-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2.5rem 3rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    width: 360px;
+}
+
+.auth-icon {
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0.4rem;
+}
+
+.auth-desc {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 1.8rem;
+    line-height: 1.5;
+}
+
+/* 6格动态码输入 */
+.otp-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 1.2rem;
+}
+
+.otp-input {
+    width: 42px;
+    height: 52px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    color: #333;
+    outline: none;
+    transition: border-color 0.2s;
+    caret-color: transparent;
+}
+
+.otp-input:focus {
+    border-color: #5a9cf5;
+    box-shadow: 0 0 0 3px rgba(90, 156, 245, 0.15);
+}
+
+.otp-input.otp-error {
+    border-color: #e05252;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-4px); }
+    75%       { transform: translateX(4px); }
+}
+
+.auth-err {
+    color: #e05252;
+    font-size: 0.82rem;
+    margin-bottom: 1rem;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 0.65rem;
+    background: #5a9cf5;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.auth-btn:hover:not(:disabled) {
+    background: #3b82f6;
+}
+
+.auth-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

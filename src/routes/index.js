@@ -8,6 +8,7 @@ import Editor from "../components/Editor";
 import Archive from "../pages/Archive";
 import ClipboardLink from "../pages/Link/ClipboardLink";
 import ResourceLink from "../pages/Link/ResourceLink";
+import Auth from "../pages/Auth";
 
 const routingTable = [
     {
@@ -43,6 +44,10 @@ const routingTable = [
     {
         path: '/backstage',
         element: <Editor/>
+    },
+    {
+        path: '/auth',
+        element: <Auth/>
     },
     {
         path: '/archive',
