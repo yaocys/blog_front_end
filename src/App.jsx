@@ -11,10 +11,9 @@ function App() {
     const navTags = [
         {id: 0, label: "随笔", link: "/essay"},
         {id: 1, label: "归档", link: "/archive"},
-        {id: 2, label: "标签", link: "/label"},
-        {id: 3, label: "关于", link: "/about"},
-        {id: 4, label: "链接", link: "/link"},
-        {id: 5, label: "后台", link: "/backstage"}
+        {id: 2, label: "关于", link: "/about"},
+        {id: 3, label: "链接", link: "/link"},
+        {id: 4, label: "后台", link: "/backstage"}
     ]
 
     return (

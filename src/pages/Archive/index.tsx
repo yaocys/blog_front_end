@@ -1,73 +1,54 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import './index.css';
+import {Link} from "react-router-dom";
 
-interface ClassificationDescription{
-    /**
-     * 分类的名称
-     */
-    title:string;
-    /**
-     * 分类的描述
-     */
-    description:string;
+interface Tag {
+    id: string;
+    name: string;
+    description: string;
+    color: string;
 }
 
-/**
- * 单个分类卡片模块
- * @constructor
- */
-function Classification(props:ClassificationDescription){
+function TagCard(props: {tag: Tag}) {
+    const {tag} = props;
     return (
         <div className="col-sm-4 mb-3 mb-sm-0">
             <div className="card">
                 <div className="card-body">
-                    <h5 className="card-title">{props.title}</h5>
-                    <p className="card-text text-muted">{props.description}</p>
-                    <a href="#" className="btn btn-outline-primary btn-sm">查看</a>
+                    <h5 className="card-title">
+                        <span className={`badge bg-${tag.color}-subtle`} style={{color: '#2d3436'}}>
+                            {tag.name}
+                        </span>
+                    </h5>
+                    <p className="card-text text-muted">{tag.description}</p>
+                    <Link to={`/essay?tag=${tag.id}&tagName=${encodeURIComponent(tag.name)}&tagColor=${tag.color}`}
+                          className="btn btn-outline-primary btn-sm">查看</Link>
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-function Archive(){
+function Archive() {
+    const [tags, setTags] = useState<Tag[]>([]);
 
-    const parts:ClassificationDescription[] = [
-        {
-            title:'刷题笔记',
-            description:'来源于 力扣、牛客、ACWind、赛码网 等诸多平台代码编程题目的记录'
-
-        },
-        {
-            title:'阅读笔记',
-            description:'来自阅读书籍的摘抄、总结与读后感'
-        },
-        {
-            title:'八股文',
-            description:'面试理论知识点'
-        }
-    ];
-
-    const a = parts[0];
+    useEffect(() => {
+        fetch('/api1/tag/listAll')
+            .then(r => r.json())
+            .then(data => setTags(data))
+            .catch(err => console.error('加载标签失败', err));
+    }, []);
 
     return (
         <div className="row">
-            <Classification {...parts[0]}/>
-            <Classification {...parts[1]}/>
-            <Classification {...parts[2]}/>
-            <div className="dropdown">
-                <button className="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                    Dropdown button
-                </button>
-                <ul className="dropdown-menu">
-                    <li><a className="dropdown-item" href="#">Action</a></li>
-                    <li><a className="dropdown-item" href="#">Another action</a></li>
-                    <li><a className="dropdown-item" href="#">Something else here</a></li>
-                </ul>
-            </div>
+            {tags.map(tag => (
+                <TagCard key={tag.id} tag={tag}/>
+            ))}
+            {tags.length === 0 && (
+                <p className="text-muted">暂无标签</p>
+            )}
         </div>
-    )
+    );
 }
 
 export default Archive;

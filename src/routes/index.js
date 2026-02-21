@@ -46,6 +46,10 @@ const routingTable = [
         element: <Editor/>
     },
     {
+        path: '/backstage/:id',
+        element: <Editor/>
+    },
+    {
         path: '/auth',
         element: <Auth/>
     },

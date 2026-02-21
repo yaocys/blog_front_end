@@ -3,7 +3,7 @@ import Vditor from "vditor";
 import "vditor/dist/index.css";
 import COS from 'cos-js-sdk-v5';
 import './index.css'
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import Tag from "./Tag";
 
 
@@ -15,7 +15,10 @@ const cos = new COS({
 
 const Editor = () => {
     const [vditor, setVditor] = useState<Vditor>();
+    const [initialTags, setInitialTags] = useState<any[]>([]);
     const navigate = useNavigate();
+    const {id} = useParams<{id?: string}>();
+    const tagRef = useRef<any>(null);
 
     // 挂载时检查是否已通过 TOTP 认证，未认证则跳转到验证页
     useEffect(() => {
@@ -28,13 +31,29 @@ const Editor = () => {
 
     useEffect(() => {
         // 配置Vditor编辑器
-        const vditor = new Vditor("vditor", {
+        const vditorInstance = new Vditor("vditor", {
             height: 'calc(55vh)',
             placeholder: '记录此刻所思所想！',
             typewriterMode: true,
             mode: 'ir',
+            cache: { enable: false },
             after: () => {
-                setVditor(vditor);
+                setVditor(vditorInstance);
+                // 编辑模式：加载已有文章内容
+                if (id) {
+                    fetch(`/api1/essay/selectOne?id=${id}`, {credentials: 'include'})
+                        .then(r => r.json())
+                        .then(essay => {
+                            vditorInstance.setValue(essay.content || '');
+                            if (titleRef.current) {
+                                (titleRef.current as HTMLInputElement).value = essay.title || '';
+                            }
+                            if (essay.tags && essay.tags.length > 0) {
+                                setInitialTags(essay.tags);
+                            }
+                        })
+                        .catch(err => console.error('加载文章失败', err));
+                }
             },
             toolbar: [
                 'emoji', '|', 'check', '|', 'table', '|', 'upload', '|', 'edit-mode', '|',
@@ -65,56 +84,79 @@ const Editor = () => {
                     return name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5.)]/g, '').replace(/[?\\/:|<>*\[\]()$%{}@~]/g, '').replace('/\\s/g', '')
                 },
                 success(editor: HTMLPreElement, msg: string) {
-                    vditor.insertValue(`![${JSON.parse(msg).data.name}](${JSON.parse(msg).data.url})`)
+                    vditorInstance.insertValue(`![${JSON.parse(msg).data.name}](${JSON.parse(msg).data.url})`)
                 }
-        }
+            }
         });
     }, []);
 
     const titleRef = useRef(null);
 
     const Release = async (title: any, vditor: Vditor) => {
-        // 参数校验
-        if (title === null) {
+        if (!title || !title.value || !title.value.trim()) {
             alert('标题不能为空！');
             return;
         }
         const md = vditor.getValue();
-        if (md === null || md.length === 0) {
+        if (!md || !md.trim()) {
             alert("文本内容为空！");
             return;
         }
 
-        // 准备发送给后端的对象
-        const essay = {
-            title: title.value,
-            content: md,
+        let essayId: string;
+
+        if (id) {
+            // 编辑模式：更新已有文章
+            const response = await fetch('/api1/essay/updateEssay', {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id, title: title.value, content: md})
+            });
+            if (response.status === 401) {
+                alert('登录已过期，请重新验证');
+                navigate('/auth', {replace: true});
+                return;
+            }
+            if (!response.ok) {
+                const msg = await response.text();
+                alert(msg || '更新失败，请稍后重试');
+                return;
+            }
+            essayId = id;
+        } else {
+            // 新增模式：发布新文章
+            const response = await fetch('/api1/essay/saveEssay', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({title: title.value, content: md})
+            });
+            if (response.status === 401) {
+                alert('登录已过期，请重新验证');
+                navigate('/auth', {replace: true});
+                return;
+            }
+            if (!response.ok) {
+                const msg = await response.text();
+                alert(msg || '发布失败，请稍后重试');
+                return;
+            }
+            essayId = await response.text();
         }
 
-        // 向后端发送保存文章的请求，携带认证 Cookie
-        const response = await fetch('/api1/essay/saveEssay', {
+        // 保存文章标签
+        const tagIds = tagRef.current ? tagRef.current.getSelectedTagIds() : [];
+        await fetch('/api1/tag/setEssayTags', {
             method: 'POST',
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(essay)
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({essayId, tagIds})
         });
-
-        if (response.status === 401) {
-            alert('登录已过期，请重新验证');
-            navigate('/auth', {replace: true});
-            return;
-        }
-
-        if (!response.ok) {
-            alert('发布失败，请稍后重试');
-            return;
-        }
 
         vditor.clearCache();
         vditor.setValue('');
-        alert('发布文章成功');
+        alert(id ? '更新文章成功' : '发布文章成功');
         navigate('/essay', {replace: true});
     }
 
@@ -125,14 +167,15 @@ const Editor = () => {
                     <input className="form-control me-2" type="text" placeholder="文章标题" aria-label="Title"
                            ref={titleRef}/>
                     <button className="btn btn-outline-info btn-sm me-1 text-nowrap" type="submit"
-                            onClick={() => Release(titleRef.current as any, vditor as Vditor)}>发布
+                            onClick={() => Release(titleRef.current as any, vditor as Vditor)}>
+                        {id ? '更新' : '发布'}
                     </button>
                     <button className="btn btn-outline-secondary btn-sm me-1 text-nowrap" type="button">保存草稿
                     </button>
                 </form>
             </div>
 
-            <Tag/>
+            <Tag ref={tagRef} initialTags={initialTags}/>
 
             <div id="vditor" className="vditor"/>
         </>

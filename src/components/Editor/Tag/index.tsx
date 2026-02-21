@@ -1,118 +1,227 @@
-import React from "react";
+import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
 import './index.css'
+
+interface Tag {
+    id: string;
+    name: string;
+    description: string;
+    color: string;
+}
+
+interface TagHandle {
+    getSelectedTagIds: () => string[];
+}
+
+type ModalView = 'list' | 'new' | 'edit';
+
+const COLORS = ['primary', 'success', 'danger', 'warning', 'info'];
+
+const emptyForm = {id: '', name: '', description: '', color: 'primary'};
 
 /**
  * 文章编辑页的标签区域组件
+ * 通过 ref 暴露 getSelectedTagIds() 供父组件获取已选标签 ID 列表
+ *
+ * 使用单一 Bootstrap Modal + React state 切换视图，避免多 modal 叠加产生的残留遮罩层问题
  */
-function Tag() {
-    return (
-        // 文章编辑页的标签选择栏
-        <div className="align-content-end w-100">
-            <SelectedTags/>
-            {/*这是一级菜单：为文章添加标签*/}
-            <Modal/>
-        </div>
-    )
-}
+const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTags = []}, ref) {
+    const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+    const [allTags, setAllTags] = useState<Tag[]>([]);
+    const [search, setSearch] = useState('');
+    const [modalView, setModalView] = useState<ModalView>('list');
+    const [tagForm, setTagForm] = useState(emptyForm);
 
-function SelectedTags() {
-    return (
+    const modalRef = useRef<HTMLDivElement>(null);
+    const bsModalRef = useRef<any>(null);
+
+    useImperativeHandle(ref, () => ({
+        getSelectedTagIds: () => selectedTags.map(t => t.id)
+    }));
+
+    const getBsModal = () => {
+        if (!bsModalRef.current && modalRef.current) {
+            bsModalRef.current = new (window as any).bootstrap.Modal(modalRef.current);
+        }
+        return bsModalRef.current;
+    };
+
+    const showModal = (view: ModalView) => {
+        setModalView(view);
+        getBsModal()?.show();
+    };
+
+    const hideModal = () => {
+        getBsModal()?.hide();
+    };
+
+    const loadAllTags = () => {
+        fetch('/api1/tag/listAll')
+            .then(r => r.json())
+            .then(data => setAllTags(data))
+            .catch(err => console.error('加载标签失败', err));
+    };
+
+    useEffect(() => {
+        loadAllTags();
+    }, []);
+
+    useEffect(() => {
+        if (initialTags && initialTags.length > 0) {
+            setSelectedTags(initialTags);
+        }
+    }, [initialTags]);
+
+    const removeTag = (id: string) => {
+        setSelectedTags(prev => prev.filter(t => t.id !== id));
+    };
+
+    const addTag = (tag: Tag) => {
+        if (!selectedTags.find(t => t.id === tag.id)) {
+            setSelectedTags(prev => [...prev, tag]);
+        }
+    };
+
+    const unselectedTags = allTags.filter(t =>
+        !selectedTags.find(s => s.id === t.id) &&
+        (search === '' || t.name.includes(search))
+    );
+
+    const handleSaveNewTag = () => {
+        if (!tagForm.name.trim()) { alert('标签名不能为空'); return; }
+        fetch('/api1/tag/saveTag', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: tagForm.name, description: tagForm.description, color: tagForm.color})
+        }).then(r => {
+            if (!r.ok) { alert('创建失败'); return; }
+            loadAllTags();
+            setTagForm(emptyForm);
+            setModalView('list');  // 直接切换视图，modal 保持打开，无遮罩层问题
+        }).catch(() => alert('创建失败'));
+    };
+
+    const handleUpdateTag = () => {
+        if (!tagForm.name.trim()) { alert('标签名不能为空'); return; }
+        fetch('/api1/tag/updateTag', {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: tagForm.id, name: tagForm.name, description: tagForm.description, color: tagForm.color})
+        }).then(r => {
+            if (!r.ok) { alert('更新失败'); return; }
+            loadAllTags();
+            setSelectedTags(prev => prev.map(t => t.id === tagForm.id
+                ? {...t, name: tagForm.name, description: tagForm.description, color: tagForm.color}
+                : t));
+            setModalView('list');
+        }).catch(() => alert('更新失败'));
+    };
+
+    const renderListView = () => (
         <>
-            <span className="badge rounded-pill bg-danger-subtle tag">阅读笔记
-       <button type="button" className="btn btn-primary cross2">×</button>
-            </span>
-            <span className="badge rounded-pill bg-info-subtle tag">Leetcode
-                <button type="button" className="btn btn-primary cross2">×</button>
-            </span>
-            <span className="badge rounded-pill bg-success-subtle tag">建站日志
-                <button type="button" className="btn btn-primary cross2">×</button>
-            </span>
+            <div className="modal-header">
+                <h1 className="modal-title fs-5">添加标签</h1>
+                <button type="button" className="btn-close" onClick={hideModal} aria-label="Close"/>
+            </div>
+            <div className="modal-body">
+                <form className="d-flex mb-3" role="search" onSubmit={e => e.preventDefault()}>
+                    <input className="form-control me-2" type="search" placeholder="搜索标签"
+                           value={search} onChange={e => setSearch(e.target.value)}/>
+                </form>
+                <ul className="list-group">
+                    {unselectedTags.map(tag => (
+                        <li key={tag.id} className="list-group-item d-flex justify-content-between align-items-center">
+                            <span className={`badge bg-${tag.color}-subtle`} style={{color: '#2d3436'}}>{tag.name}</span>
+                            <div>
+                                <button className="btn btn-sm btn-outline-secondary me-2"
+                                        onClick={() => {
+                                            setTagForm({id: tag.id, name: tag.name, description: tag.description || '', color: tag.color});
+                                            setModalView('edit');
+                                        }}>编辑</button>
+                                <button className="btn btn-sm btn-outline-primary"
+                                        onClick={() => addTag(tag)}>添加</button>
+                            </div>
+                        </li>
+                    ))}
+                    {unselectedTags.length === 0 && (
+                        <li className="list-group-item text-muted">没有可添加的标签</li>
+                    )}
+                </ul>
+            </div>
+            <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={hideModal}>关闭</button>
+                <button className="btn btn-outline-success btn-sm"
+                        onClick={() => { setTagForm(emptyForm); setModalView('new'); }}>新建标签</button>
+            </div>
         </>
-    )
-}
+    );
 
-/**
- * 嵌套的双层模态对话框，添加和新建标签
- */
-function Modal() {
+    const renderFormView = () => {
+        const isEdit = modalView === 'edit';
+        return (
+            <>
+                <div className="modal-header">
+                    <h1 className="modal-title fs-5">{isEdit ? '编辑标签' : '新建标签'}</h1>
+                    <button type="button" className="btn-close" onClick={hideModal} aria-label="Close"/>
+                </div>
+                <div className="modal-body">
+                    <form>
+                        <div className="mb-3">
+                            <label className="col-form-label">标签名：</label>
+                            <input type="text" className="form-control" value={tagForm.name}
+                                   onChange={e => setTagForm(f => ({...f, name: e.target.value}))}/>
+                        </div>
+                        <div className="mb-3">
+                            <label className="col-form-label">备注：</label>
+                            <textarea className="form-control" value={tagForm.description}
+                                      onChange={e => setTagForm(f => ({...f, description: e.target.value}))}/>
+                        </div>
+                        <div className="mb-3">
+                            <label className="col-form-label">颜色：</label>
+                            <select className="form-select" value={tagForm.color}
+                                    onChange={e => setTagForm(f => ({...f, color: e.target.value}))}>
+                                {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div className="modal-footer">
+                    <button type="button" className="btn btn-outline-secondary btn-sm"
+                            onClick={() => setModalView('list')}>取消</button>
+                    <button className="btn btn-outline-warning btn-sm"
+                            onClick={isEdit ? handleUpdateTag : handleSaveNewTag}>
+                        {isEdit ? '保存' : '创建'}
+                    </button>
+                </div>
+            </>
+        );
+    };
+
     return (
-        <>
-            <div className="modal fade" id="exampleModalToggle" aria-hidden="true"
-                 aria-labelledby="exampleModalToggleLabel" tabIndex={parseInt("-1")}>
+        <div className="align-content-end w-100" style={{marginBottom: '0.5em'}}>
+            {/* 已选标签展示 */}
+            {selectedTags.map(tag => (
+                <span key={tag.id} className={`badge rounded-pill bg-${tag.color}-subtle tag`}>
+                    {tag.name}
+                    <button type="button" className="btn btn-primary cross2" onClick={() => removeTag(tag.id)}>×</button>
+                </span>
+            ))}
+
+            {/* 单一 modal，通过 modalView state 切换内容，避免多 modal 叠加的遮罩层残留问题 */}
+            <div className="modal fade" ref={modalRef} tabIndex={-1}>
                 <div className="modal-dialog modal-dialog-centered modal-lg">
                     <div className="modal-content">
-                        {/*弹出框头*/}
-                        <div className="modal-header">
-                            <h1 className="modal-title fs-5" id="exampleModalToggleLabel2">添加标签</h1>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                        </div>
-                        {/*弹出框中部内容*/}
-                        <div className="modal-body">
-                            <div className="container-fluid">
-                                <form className="d-flex" role="search">
-                                    <input className="form-control me-2" type="search" placeholder="搜索标签"
-                                           aria-label="Search"/>
-                                    <button className="btn btn-outline-success text-nowrap" type="submit">搜索</button>
-                                </form>
-                            </div>
-                        </div>
-                        {/*弹出框尾部按钮*/}
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-outline-secondary btn-sm"
-                                    data-bs-dismiss="modal">取消
-                            </button>
-                            <button type="button" className="btn btn-outline-primary btn-sm">添加</button>
-                            <button className="btn btn-outline-success btn-sm" data-bs-target="#exampleModalToggle2"
-                                    data-bs-toggle="modal">新建标签
-                            </button>
-                        </div>
+                        {modalView === 'list' ? renderListView() : renderFormView()}
                     </div>
                 </div>
             </div>
-            {/*这是二级菜单：新建新新标签*/}
-            <div className="modal fade" id="exampleModalToggle2" aria-hidden="true"
-                 aria-labelledby="exampleModalToggleLabel2" tabIndex={parseInt("-1")}>
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content">
-                        {/*弹出框头部标题*/}
-                        <div className="modal-header">
-                            <h1 className="modal-title fs-5" id="exampleModalLabel">新建标签</h1>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                        </div>
-                        {/*弹出框中间内容*/}
-                        <div className="modal-body">
-                            <form>
-                                <div className="mb-3">
-                                    <label htmlFor="recipient-name" className="col-form-label">标签名：</label>
-                                    <input type="text" className="form-control" id="recipient-name"/>
-                                </div>
-                                <div className="mb-3">
-                                    <label htmlFor="message-text" className="col-form-label">备注：</label>
-                                    <textarea className="form-control" id="message-text"></textarea>
-                                </div>
-                            </form>
-                        </div>
-                        {/*弹出框尾部按钮*/}
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-outline-secondary btn-sm"
-                                    data-bs-target="#exampleModalToggle"
-                                    data-bs-toggle="modal">取消
-                            </button>
-                            <button className="btn btn-outline-warning btn-sm" data-bs-target="#exampleModalToggle"
-                                    data-bs-toggle="modal">添加
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {/*一级弹出框的页面启动按钮*/}
+
+            {/* 触发按钮 */}
             <button className="btn btn-outline-success btn-sm text-nowrap"
-                    data-bs-target="#exampleModalToggle" data-bs-toggle="modal">添加标签
-            </button>
-        </>
-    )
-}
+                    onClick={() => showModal('list')}>添加标签</button>
+        </div>
+    );
+});
 
 export default Tag;
