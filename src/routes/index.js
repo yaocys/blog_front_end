@@ -5,8 +5,6 @@ import Link from "../pages/Link";
 import {Navigate} from "react-router-dom";
 import React from "react";
 import Editor from "../components/Editor";
-import Article from "../pages/Article";
-import Album from "../pages/Album";
 import Archive from "../pages/Archive";
 import ClipboardLink from "../pages/Link/ClipboardLink";
 import ResourceLink from "../pages/Link/ResourceLink";
@@ -45,14 +43,6 @@ const routingTable = [
     {
         path: '/backstage',
         element: <Editor/>
-    },
-    {
-        path: '/article',
-        element: <Article/>
-    },
-    {
-        path: '/album',
-        element: <Album/>
     },
     {
         path: '/archive',
