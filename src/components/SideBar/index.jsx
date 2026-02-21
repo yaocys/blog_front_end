@@ -2,8 +2,7 @@ import React from "react";
 import './index.css';
 import {NavLink} from "react-router-dom";
 
-function SideBar(props) {
-    const {navTags} = props;
+function SideBar({ navTags, outline }) {
     return (
         <div id="side-bar" className="col-2">
             <nav className="nav flex-column align-items-end">
@@ -18,6 +17,17 @@ function SideBar(props) {
                     })
                 }
             </nav>
+
+            {outline.length > 0 && (
+                <nav id="side-outline" className="nav flex-column align-items-end mt-3">
+                    {outline.map((item, i) => (
+                        <a key={i} href={`#${item.id}`} className="nav-link py-0"
+                           style={{ paddingRight: `${(item.level - 1) * 0.6}rem` }}>
+                            {item.text}
+                        </a>
+                    ))}
+                </nav>
+            )}
         </div>
     )
 }

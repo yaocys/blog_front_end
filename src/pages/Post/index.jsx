@@ -1,20 +1,19 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import moment from 'moment';
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkFlexibleMarkers from 'remark-flexible-markers'
-import {Prism as SyntaxHighlighter} from "react-syntax-highlighter"
-import {tomorrow} from "react-syntax-highlighter/dist/esm/styles/prism"
+import Vditor from 'vditor';
 import './index.css'
 import {Link, useParams} from "react-router-dom";
 import axios from "axios";
 import {useAuth} from "../../hooks/useAuth";
+import {useOutline} from "../../context/OutlineContext";
 
 function Post() {
 
     const [essay, setEssay] = useState(null);
     const param = useParams();
     const isAuth = useAuth();
+    const previewRef = useRef(null);
+    const { setOutline } = useOutline();
 
     useEffect(() => {
         axios.get(`/api1/essay/selectOne?id=${param.id}`).then(
@@ -22,6 +21,26 @@ function Post() {
             error => console.log('请求失败', error)
         )
     }, [param.id]);
+
+    useEffect(() => {
+        if (!essay?.content || !previewRef.current) return;
+
+        Vditor.preview(previewRef.current, essay.content, {
+            anchor: 1,
+            hljs: { enable: true, style: 'github', lineNumber: true },
+            markdown: { mark: true },
+            after() {
+                const headings = previewRef.current.querySelectorAll('h1,h2,h3,h4,h5,h6');
+                setOutline(Array.from(headings).map(h => ({
+                    id: h.id,
+                    text: h.textContent.replace(/\s*#\s*$/, '').trim(),
+                    level: parseInt(h.tagName[1])
+                })));
+            }
+        });
+
+        return () => setOutline([]);
+    }, [essay?.content]);
 
     return (
         <>
@@ -55,31 +74,7 @@ function Post() {
                 </div>
             )}
 
-            <div className="markdown-body" id="essay">
-                <ReactMarkdown
-                    children={essay && essay.content}
-                    remarkPlugins={[remarkGfm, remarkFlexibleMarkers]}
-                    components={{
-                        code({node, inline, className, children, ...props}) {
-                            const match = /language-(\w+)/.exec(className || '')
-                            return !inline && match ? (
-                                <SyntaxHighlighter
-                                    children={String(children).replace(/\n$/, '')}
-                                    style={tomorrow}
-                                    language={match[1]}
-                                    PreTag="div"
-                                    showLineNumbers="true"
-                                    showInlineLineNumbers="true"
-                                    {...props}
-                                />
-                            ) : (
-                                <code className={className} {...props}>
-                                    {children}
-                                </code>
-                            )
-                        }
-                    }}/>
-            </div>
+            <div ref={previewRef} id="essay"/>
         </>
     )
 }

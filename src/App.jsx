@@ -5,6 +5,7 @@ import './App.css';
 import {GlobalScrollbar} from 'mac-scrollbar';
 import 'mac-scrollbar/dist/mac-scrollbar.css';
 import NavBar from "./pages/NavBar";
+import {OutlineContext} from "./context/OutlineContext";
 
 function App() {
 
@@ -16,15 +17,17 @@ function App() {
         {id: 4, label: "后台", link: "/backstage"}
     ]
 
+    const [outline, setOutline] = useState([]);
+
     return (
-        <>
+        <OutlineContext.Provider value={{ outline, setOutline }}>
             <NavBar navTags={navTags}/>
             <div id="container" className="container row">
-                <SideBar navTags={navTags}/>
+                <SideBar navTags={navTags} outline={outline}/>
                 <Main navTags={navTags}/>
                 {/*<GlobalScrollbar/>*/}
             </div>
-        </>
+        </OutlineContext.Provider>
     )
 }
 

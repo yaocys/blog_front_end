@@ -20,3 +20,26 @@
 .nav-tag:hover {
     text-decoration: none;
 }
+
+#side-outline {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 0.5rem;
+}
+
+#side-outline a {
+    font-size: 0.72rem;
+    color: #adb5bd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.8;
+    transition: color 0.15s;
+}
+
+#side-outline a:hover {
+    color: #495057;
+    text-decoration: none;
+}
