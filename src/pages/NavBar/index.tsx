@@ -1,17 +1,10 @@
 import React from "react";
 import './index.css';
 import icon from './icon.png';
-import {Link, NavLink, useLocation, useSearchParams} from "react-router-dom";
+import {Link, NavLink} from "react-router-dom";
 
 function NavBar(props: { navTags: Array<any>; }){
     const {navTags} = props;
-    const [searchParams] = useSearchParams();
-    const location = useLocation();
-
-    const tagId = searchParams.get('tag');
-    const tagName = searchParams.get('tagName');
-    const tagColor = searchParams.get('tagColor') || 'primary';
-    const showBreadcrumb = location.pathname === '/essay' && !!tagId;
 
     const closeNavbar = () => {
         const el = document.getElementById('navbarSupportedContent');
@@ -57,23 +50,6 @@ function NavBar(props: { navTags: Array<any>; }){
                     </form>
                 </div>
             </div>
-
-            {showBreadcrumb && (
-                <div className="container-md" style={{borderTop: '1px solid #dee2e6', paddingTop: '0.3rem', paddingBottom: '0.3rem'}}>
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb mb-0" style={{fontSize: 'small'}}>
-                            <li className="breadcrumb-item">
-                                <Link to="/essay">随笔</Link>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                <span className={`badge bg-${tagColor}-subtle`} style={{color: '#2d3436'}}>
-                                    {tagName || '标签筛选'}
-                                </span>
-                            </li>
-                        </ol>
-                    </nav>
-                </div>
-            )}
         </nav>
     )
 }

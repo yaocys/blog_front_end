@@ -43,7 +43,7 @@ function Archive() {
 
     if (loading) {
         return (
-            <div className="row placeholder-glow">
+            <div className="row placeholder-glow" style={{color: '#d0d5db'}}>
                 {Array.from({length: 6}).map((_, i) => (
                     <div key={i} className="col-sm-4 mb-3">
                         <div className="card">

@@ -109,7 +109,8 @@ function TimeLine() {
     return (
         <>
             <table className="table" frame="void" rules="none">
-                <tbody className={loading && essayList.length === 0 ? 'placeholder-glow' : ''}>
+                <tbody className={loading && essayList.length === 0 ? 'placeholder-glow' : ''}
+                       style={loading && essayList.length === 0 ? {color: '#d0d5db'} : {}}>
                 {loading && essayList.length === 0
                     ? Array.from({length: 7}).map((_, i) => (
                         <tr key={`skel-${i}`}>

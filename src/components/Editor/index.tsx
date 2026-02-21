@@ -189,7 +189,7 @@ const Editor = () => {
 
             <div id="vditor" className="vditor"/>
 
-            <div className="toast-container position-fixed bottom-0 end-0 p-3" style={{zIndex: 1100}}>
+            <div className="toast-container position-fixed top-0 start-50 translate-middle-x pt-3" style={{zIndex: 1100}}>
                 <div id="editor-success-toast" className="toast align-items-center text-bg-success border-0"
                      role="alert" aria-live="assertive" aria-atomic="true">
                     <div className="d-flex">
