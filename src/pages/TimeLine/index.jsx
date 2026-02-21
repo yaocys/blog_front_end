@@ -53,8 +53,6 @@ function TimeLine() {
     const [searchParams] = useSearchParams();
 
     const tagId = searchParams.get('tag');
-    const tagName = searchParams.get('tagName');
-    const tagColor = searchParams.get('tagColor') || 'primary';
 
     // tagId 切换时重置列表
     useEffect(() => {
@@ -110,24 +108,23 @@ function TimeLine() {
 
     return (
         <>
-            {/* 标签筛选头部 */}
-            {tagId && (
-                <div style={{marginBottom: '0.5em'}}>
-                    <span className="text-muted" style={{fontSize: 'small'}}>随笔 &gt;&nbsp;</span>
-                    <span className={`badge bg-${tagColor}-subtle`} style={{color: '#2d3436', fontWeight: 'bold', fontSize: 'small'}}>
-                        {tagName || '标签筛选'}
-                    </span>
-                    <Link to="/essay" className="btn btn-sm btn-link" style={{fontSize: 'small', paddingTop: 0}}>
-                        返回全部
-                    </Link>
-                </div>
-            )}
-
             <table className="table" frame="void" rules="none">
-                <tbody>
-                {displayList.map((essay) => (
-                    <Item key={essay.id} essay={essay} isAuth={isAuth} onDelete={handleDelete}/>
-                ))}
+                <tbody className={loading && essayList.length === 0 ? 'placeholder-glow' : ''}>
+                {loading && essayList.length === 0
+                    ? Array.from({length: 7}).map((_, i) => (
+                        <tr key={`skel-${i}`}>
+                            <td style={{textAlign: 'center', whiteSpace: 'nowrap', width: '90px'}}>
+                                <span className="placeholder rounded" style={{display: 'inline-block', width: '70%'}}></span>
+                            </td>
+                            <td>
+                                <span className="placeholder rounded" style={{display: 'inline-block', width: `${45 + (i % 5) * 9}%`}}></span>
+                            </td>
+                        </tr>
+                    ))
+                    : displayList.map((essay) => (
+                        <Item key={essay.id} essay={essay} isAuth={isAuth} onDelete={handleDelete}/>
+                    ))
+                }
                 </tbody>
             </table>
 

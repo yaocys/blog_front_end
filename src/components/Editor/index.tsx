@@ -92,6 +92,16 @@ const Editor = () => {
 
     const titleRef = useRef(null);
 
+    const showToast = (message: string) => {
+        const toastEl = document.getElementById('editor-success-toast');
+        if (toastEl) {
+            const msgEl = document.getElementById('editor-toast-body');
+            if (msgEl) msgEl.textContent = message;
+            const toast = new (window as any).bootstrap.Toast(toastEl, {delay: 2000});
+            toast.show();
+        }
+    };
+
     const Release = async (title: any, vditor: Vditor) => {
         if (!title || !title.value || !title.value.trim()) {
             alert('标题不能为空！');
@@ -156,8 +166,8 @@ const Editor = () => {
 
         vditor.clearCache();
         vditor.setValue('');
-        alert(id ? '更新文章成功' : '发布文章成功');
-        navigate('/essay', {replace: true});
+        showToast(id ? '更新文章成功' : '发布文章成功');
+        setTimeout(() => navigate('/essay', {replace: true}), 1200);
     }
 
     return (
@@ -178,6 +188,17 @@ const Editor = () => {
             <Tag ref={tagRef} initialTags={initialTags}/>
 
             <div id="vditor" className="vditor"/>
+
+            <div className="toast-container position-fixed bottom-0 end-0 p-3" style={{zIndex: 1100}}>
+                <div id="editor-success-toast" className="toast align-items-center text-bg-success border-0"
+                     role="alert" aria-live="assertive" aria-atomic="true">
+                    <div className="d-flex">
+                        <div className="toast-body" id="editor-toast-body"></div>
+                        <button type="button" className="btn-close btn-close-white me-2 m-auto"
+                                data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
         </>
     )
 };
