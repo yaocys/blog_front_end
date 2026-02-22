@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import './index.css'
 import {Link, useSearchParams} from "react-router-dom";
 import moment from "moment";
@@ -22,11 +22,11 @@ function Item({essay, isAuth, onDelete}) {
 
     return (
         <tr onMouseEnter={() => setMouseHover(true)} onMouseLeave={() => setMouseHover(false)}>
-            <td style={{textAlign: "center", whiteSpace: 'nowrap'}}>
-                {essay.showDate && moment(essay.createTime).format("YYYY-MM-DD")}
-            </td>
             <td>
-                <Link to={`${moment(essay.createTime).format("YYYY/MM")}/${essay.id}`}>{essay.title}</Link>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1em'}}>
+                    <Link to={`${moment(essay.createTime).format("YYYY/MM")}/${essay.id}`}>{essay.title}</Link>
+                    <span className="essay-date">{moment(essay.createTime).format("MM-DD")}</span>
+                </div>
             </td>
             {isAuth === true && (
                 <td style={{textAlign: "right", width: "120px"}}>
@@ -98,13 +98,15 @@ function TimeLine() {
         setEssayList(prev => prev.filter(e => e.id !== id));
     };
 
-    // 按天聚合：同一天的文章只有第一条显示日期
-    let date = '';
+    // 按年聚合：同一年的文章只有第一条显示年份标题
+    let currentYear = '';
     const displayList = essayList.map((essay) => {
-        const d = moment(essay.createTime).format("YYYY-MM-DD");
-        if (date !== d) { date = d; return {...essay, showDate: true}; }
-        return {...essay, showDate: false};
+        const y = moment(essay.createTime).format("YYYY");
+        if (currentYear !== y) { currentYear = y; return {...essay, showYear: true}; }
+        return {...essay, showYear: false};
     });
+
+    const colSpan = isAuth === true ? 2 : 1;
 
     return (
         <>
@@ -114,16 +116,22 @@ function TimeLine() {
                 {loading && essayList.length === 0
                     ? Array.from({length: 7}).map((_, i) => (
                         <tr key={`skel-${i}`}>
-                            <td style={{textAlign: 'center', whiteSpace: 'nowrap', width: '90px'}}>
-                                <span className="placeholder rounded" style={{display: 'inline-block', width: '70%'}}></span>
-                            </td>
                             <td>
                                 <span className="placeholder rounded" style={{display: 'inline-block', width: `${45 + (i % 5) * 9}%`}}></span>
                             </td>
                         </tr>
                     ))
                     : displayList.map((essay) => (
-                        <Item key={essay.id} essay={essay} isAuth={isAuth} onDelete={handleDelete}/>
+                        <React.Fragment key={essay.id}>
+                            {essay.showYear && (
+                                <tr>
+                                    <td colSpan={colSpan} className="timeline-year-header">
+                                        {moment(essay.createTime).format("YYYY")}
+                                    </td>
+                                </tr>
+                            )}
+                            <Item essay={essay} isAuth={isAuth} onDelete={handleDelete}/>
+                        </React.Fragment>
                     ))
                 }
                 </tbody>
