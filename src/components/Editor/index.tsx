@@ -19,6 +19,7 @@ const Editor = () => {
     const [initialTags, setInitialTags] = useState<any[]>([]);
     const [articleCreateTime, setArticleCreateTime] = useState<number>(0);
     const [authReady, setAuthReady] = useState(false);
+    const [isDraft, setIsDraft] = useState(false);
     const navigate = useNavigate();
     const {id} = useParams<{id?: string}>();
     const tagRef = useRef<any>(null);
@@ -59,6 +60,7 @@ const Editor = () => {
                             if (essay.createTime) {
                                 setArticleCreateTime(essay.createTime);
                             }
+                            setIsDraft(essay.isDraft === 1);
                         })
                         .catch(err => console.error('加载文章失败', err));
                 }
@@ -128,12 +130,12 @@ const Editor = () => {
         let essayId: string;
 
         if (id) {
-            // 编辑模式：更新已有文章
+            // 编辑模式：更新已有文章（明确标记为已发布）
             const response = await fetch('/api1/essay/updateEssay', {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id, title: title.value, content: md})
+                body: JSON.stringify({id, title: title.value, content: md, isDraft: 0})
             });
             if (response.status === 401) {
                 alert('登录已过期，请重新验证');
@@ -152,7 +154,7 @@ const Editor = () => {
                 method: 'POST',
                 credentials: 'include',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({title: title.value, content: md})
+                body: JSON.stringify({title: title.value, content: md, isDraft: 0})
             });
             if (response.status === 401) {
                 alert('登录已过期，请重新验证');
@@ -179,8 +181,67 @@ const Editor = () => {
         const yearMonth = id
             ? moment(articleCreateTime).format("YYYY/MM")
             : moment().format("YYYY/MM");
-        showToast(id ? '更新文章成功' : '发布文章成功');
+        showToast(isDraft ? '发布成功' : (id ? '更新文章成功' : '发布文章成功'));
         setTimeout(() => navigate(`/essay/${yearMonth}/${essayId}`, {replace: true}), 800);
+    }
+
+    const saveDraft = async (title: any, vditor: Vditor) => {
+        if (!title || !title.value || !title.value.trim()) {
+            alert('标题不能为空！');
+            return;
+        }
+        const md = vditor.getValue();
+
+        if (id) {
+            // 编辑草稿：PUT 更新，保持草稿状态
+            const response = await fetch('/api1/essay/updateEssay', {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id, title: title.value, content: md, isDraft: 1})
+            });
+            if (response.status === 401) {
+                alert('登录已过期，请重新验证');
+                navigate('/auth', {replace: true});
+                return;
+            }
+            if (!response.ok) {
+                const msg = await response.text();
+                alert(msg || '保存草稿失败');
+                return;
+            }
+            setIsDraft(true);
+            showToast('草稿已保存');
+        } else {
+            // 新建草稿：POST 创建，isDraft=1
+            const response = await fetch('/api1/essay/saveEssay', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({title: title.value, content: md, isDraft: 1})
+            });
+            if (response.status === 401) {
+                alert('登录已过期，请重新验证');
+                navigate('/auth', {replace: true});
+                return;
+            }
+            if (!response.ok) {
+                const msg = await response.text();
+                alert(msg || '保存草稿失败');
+                return;
+            }
+            const essayId = await response.text();
+            // 保存标签
+            const tagIds = tagRef.current ? tagRef.current.getSelectedTagIds() : [];
+            await fetch('/api1/tag/setEssayTags', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({essayId, tagIds})
+            });
+            showToast('草稿已保存');
+            setTimeout(() => navigate(`/backstage/${essayId}`, {replace: true}), 800);
+        }
     }
 
     if (!authReady) return null;
@@ -193,10 +254,14 @@ const Editor = () => {
                            ref={titleRef}/>
                     <button className="btn btn-outline-info btn-sm me-1 text-nowrap" type="button"
                             onClick={() => Release(titleRef.current as any, vditor as Vditor)}>
-                        {id ? '更新' : '发布'}
+                        {id && !isDraft ? '更新' : '发布'}
                     </button>
-                    <button className="btn btn-outline-secondary btn-sm me-1 text-nowrap" type="button">保存草稿
-                    </button>
+                    {(!id || isDraft) && (
+                        <button className="btn btn-outline-secondary btn-sm me-1 text-nowrap" type="button"
+                                onClick={() => saveDraft(titleRef.current as any, vditor as Vditor)}>
+                            保存草稿
+                        </button>
+                    )}
                     <button className="btn btn-outline-danger btn-sm text-nowrap" type="button"
                             onClick={handleCancel}>取消
                     </button>

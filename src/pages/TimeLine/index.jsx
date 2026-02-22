@@ -21,26 +21,39 @@ function Item({essay, isAuth, onDelete}) {
     };
 
     return (
-        <tr onMouseEnter={() => setMouseHover(true)} onMouseLeave={() => setMouseHover(false)}>
-            <td>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1em'}}>
+        <div className="row align-items-center timeline-row"
+             onMouseEnter={() => setMouseHover(true)}
+             onMouseLeave={() => setMouseHover(false)}>
+            <div className="col-2"/>
+            <div className="col d-flex justify-content-between align-items-center gap-3">
+                <span className="d-flex align-items-center gap-2">
                     <Link to={`${moment(essay.createTime).format("YYYY/MM")}/${essay.id}`}>{essay.title}</Link>
-                    <span className="essay-date">{moment(essay.createTime).format("MM-DD")}</span>
-                </div>
-            </td>
+                    {isAuth === true && essay.isDraft === 1 && (
+                        <span className="badge bg-secondary" style={{fontSize: '0.7em'}}>草稿</span>
+                    )}
+                </span>
+                <span className="essay-date">{moment(essay.createTime).format("MM-DD")}</span>
+            </div>
             {isAuth === true && (
-                <td style={{textAlign: "right", width: "120px"}}>
-                    <div style={{display: mouseHover ? '' : 'none'}}>
-                        <Link to={`/backstage/${essay.id}`} className="text-info" style={{margin: "0 1em"}}>编辑</Link>
-                        <button
-                            onClick={handleDelete}
-                            className="text-danger"
-                            style={{background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit'}}
-                        >删除</button>
+                <div className="col-2 d-flex">
+                    <div className="col-6 text-center" >
+                        <div style={{display: mouseHover ? '' : 'none'}}>
+                            <Link to={`/backstage/${essay.id}`} className="text-info">编辑</Link>
+                        </div>
                     </div>
-                </td>
+                    <div className="col-6 text-center">
+                        <div style={{display: mouseHover ? '' : 'none'}}>
+                            <button
+                                onClick={handleDelete}
+                                className="text-danger"
+                                style={{background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit'}}
+                            >删除</button>
+                        </div>
+                    </div>
+                </div>
             )}
-        </tr>
+            {/*<div className="col-2"/>*/}
+        </div>
     );
 }
 
@@ -68,8 +81,7 @@ function TimeLine() {
         setLoading(true);
 
         if (tagId) {
-            // 标签筛选模式：一次性返回全部，无需分页
-            fetch(`/api1/tag/getEssaysByTag?tagId=${tagId}`)
+            fetch(`/api1/tag/getEssaysByTag?tagId=${tagId}`, {credentials: 'include'})
                 .then(r => r.json())
                 .then(data => {
                     setEssayList(data);
@@ -78,8 +90,7 @@ function TimeLine() {
                 .catch(err => console.error('加载标签文章失败', err))
                 .finally(() => setLoading(false));
         } else {
-            // 普通分页模式
-            fetch(`/api1/essay/listAll?page=${page}&size=${PAGE_SIZE}`)
+            fetch(`/api1/essay/listAll?page=${page}&size=${PAGE_SIZE}`, {credentials: 'include'})
                 .then(r => r.json())
                 .then(data => {
                     setEssayList(prev => page === 0 ? data : [...prev, ...data]);
@@ -106,36 +117,36 @@ function TimeLine() {
         return {...essay, showYear: false};
     });
 
-    const colSpan = isAuth === true ? 2 : 1;
-
     return (
         <>
-            <table className="table" frame="void" rules="none">
-                <tbody className={loading && essayList.length === 0 ? 'placeholder-glow' : ''}
-                       style={loading && essayList.length === 0 ? {color: '#d0d5db'} : {}}>
+            <div className={loading && essayList.length === 0 ? 'placeholder-glow' : ''}
+                 style={loading && essayList.length === 0 ? {color: '#d0d5db'} : {}}>
                 {loading && essayList.length === 0
                     ? Array.from({length: 7}).map((_, i) => (
-                        <tr key={`skel-${i}`}>
-                            <td>
-                                <span className="placeholder rounded" style={{display: 'inline-block', width: `${45 + (i % 5) * 9}%`}}></span>
-                            </td>
-                        </tr>
+                        <div key={`skel-${i}`} className="row timeline-row">
+                            <div className="col-2"/>
+                            <div className="col-1"/>
+                            <div className="col">
+                                <span className="placeholder rounded"
+                                      style={{display: 'inline-block', width: `${45 + (i % 5) * 9}%`}}/>
+                            </div>
+                            <div className="col-2"/>
+                        </div>
                     ))
                     : displayList.map((essay) => (
                         <React.Fragment key={essay.id}>
                             {essay.showYear && (
-                                <tr>
-                                    <td colSpan={colSpan} className="timeline-year-header">
+                                <div className="row">
+                                    <div className="col-1 offset-1 timeline-year">
                                         {moment(essay.createTime).format("YYYY")}
-                                    </td>
-                                </tr>
+                                    </div>
+                                </div>
                             )}
                             <Item essay={essay} isAuth={isAuth} onDelete={handleDelete}/>
                         </React.Fragment>
                     ))
                 }
-                </tbody>
-            </table>
+            </div>
 
             {/* 加载更多 */}
             {!tagId && (
