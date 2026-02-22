@@ -107,6 +107,10 @@ const Editor = () => {
         }
     };
 
+    const handleCancel = () => {
+        navigate('/', {replace: true});
+    };
+
     const Release = async (title: any, vditor: Vditor) => {
         if (!title || !title.value || !title.value.trim()) {
             alert('标题不能为空！');
@@ -187,6 +191,9 @@ const Editor = () => {
                         {id ? '更新' : '发布'}
                     </button>
                     <button className="btn btn-outline-secondary btn-sm me-1 text-nowrap" type="button">保存草稿
+                    </button>
+                    <button className="btn btn-outline-danger btn-sm text-nowrap" type="button"
+                            onClick={handleCancel}>取消
                     </button>
                 </form>
             </div>

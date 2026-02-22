@@ -23,14 +23,20 @@ const COLOR_MAP: Record<string, string> = {
 function TagCard({tag}: {tag: Tag}) {
     const accent = COLOR_MAP[tag.color] ?? '#6c757d';
     return (
-        <Link
-            to={`/essay?tag=${tag.id}&tagName=${encodeURIComponent(tag.name)}&tagColor=${tag.color}`}
-            className="archive-card"
-            style={{'--accent': accent} as React.CSSProperties}
-        >
-            <span className="archive-card-name">{tag.name}</span>
-            {tag.description && <p className="archive-card-desc">{tag.description}</p>}
-        </Link>
+        <div className="col">
+            <Link
+                to={`/essay?tag=${tag.id}&tagName=${encodeURIComponent(tag.name)}&tagColor=${tag.color}`}
+                className="card h-100 border-0 shadow-sm text-decoration-none archive-card"
+                style={{'--accent': accent} as React.CSSProperties}
+            >
+                <div className="card-body py-3 px-3">
+                    <h6 className="card-title fw-semibold mb-1" style={{color: '#2d3436'}}>{tag.name}</h6>
+                    {tag.description && (
+                        <p className="card-text text-muted small mb-0 archive-card-desc">{tag.description}</p>
+                    )}
+                </div>
+            </Link>
+        </div>
     );
 }
 
@@ -48,12 +54,16 @@ function Archive() {
 
     if (loading) {
         return (
-            <div className="archive-grid placeholder-glow" style={{color: '#d0d5db'}}>
-                {Array.from({length: 6}).map((_, i) => (
-                    <div key={i} className="archive-card archive-card-skeleton">
-                        <span className="placeholder rounded" style={{display: 'block', width: '45%', height: '1rem', marginBottom: '0.6rem'}}></span>
-                        <span className="placeholder rounded" style={{display: 'block', width: `${55 + (i % 3) * 10}%`, height: '0.8rem'}}></span>
-                        <span className="placeholder rounded" style={{display: 'block', width: `${30 + (i % 4) * 8}%`, height: '0.8rem', marginTop: '0.3rem'}}></span>
+            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3 placeholder-glow">
+                {Array.from({length: 8}).map((_, i) => (
+                    <div key={i} className="col">
+                        <div className="card h-100 border-0 shadow-sm archive-card" style={{minHeight: '78px', pointerEvents: 'none'}}>
+                            <div className="card-body py-3 px-3">
+                                <span className="placeholder rounded d-block mb-2" style={{width: '45%', height: '1rem'}}></span>
+                                <span className="placeholder rounded d-block" style={{width: `${55 + (i % 3) * 10}%`, height: '0.75rem'}}></span>
+                                <span className="placeholder rounded d-block mt-1" style={{width: `${30 + (i % 4) * 8}%`, height: '0.75rem'}}></span>
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -65,7 +75,7 @@ function Archive() {
     }
 
     return (
-        <div className="archive-grid">
+        <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3">
             {tags.map(tag => <TagCard key={tag.id} tag={tag}/>)}
         </div>
     );
