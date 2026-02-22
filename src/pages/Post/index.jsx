@@ -26,7 +26,7 @@ function Post() {
         if (!essay?.content || !previewRef.current) return;
 
         Vditor.preview(previewRef.current, essay.content, {
-            anchor: 1,
+            anchor: 2,
             hljs: { enable: true, style: 'github', lineNumber: true },
             markdown: { mark: true },
             after() {
