@@ -8,6 +8,10 @@
     text-decoration: none;
 }
 
+#essay .vditor-anchor--left {
+    display: none;
+}
+
 #essay .vditor-anchor svg {
     visibility: visible;
     opacity: 0.25;
