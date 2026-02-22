@@ -45,25 +45,6 @@ const Editor = () => {
             cache: { enable: false },
             after: () => {
                 setVditor(vditorInstance);
-                // 编辑模式：加载已有文章内容
-                if (id) {
-                    fetch(`/api1/essay/selectOne?id=${id}`, {credentials: 'include'})
-                        .then(r => r.json())
-                        .then(essay => {
-                            vditorInstance.setValue(essay.content || '');
-                            if (titleRef.current) {
-                                (titleRef.current as HTMLInputElement).value = essay.title || '';
-                            }
-                            if (essay.tags && essay.tags.length > 0) {
-                                setInitialTags(essay.tags);
-                            }
-                            if (essay.createTime) {
-                                setArticleCreateTime(essay.createTime);
-                            }
-                            setIsDraft(essay.isDraft === 1);
-                        })
-                        .catch(err => console.error('加载文章失败', err));
-                }
             },
             toolbar: [
                 'emoji', '|', 'check', '|', 'table', '|', 'upload', '|', 'edit-mode', '|',
@@ -99,6 +80,28 @@ const Editor = () => {
             }
         });
     }, [authReady]);
+
+    // 编辑模式：当 id / vditor 就绪时加载文章（独立 effect，
+    // 保证从 /backstage 导航到 /backstage/:id 时也能重新 fetch）
+    useEffect(() => {
+        if (!authReady || !id || !vditor) return;
+        fetch(`/api1/essay/selectOne?id=${id}`, {credentials: 'include'})
+            .then(r => r.json())
+            .then(essay => {
+                vditor.setValue(essay.content || '');
+                if (titleRef.current) {
+                    (titleRef.current as HTMLInputElement).value = essay.title || '';
+                }
+                if (essay.tags && essay.tags.length > 0) {
+                    setInitialTags(essay.tags);
+                }
+                if (essay.createTime) {
+                    setArticleCreateTime(essay.createTime);
+                }
+                setIsDraft(essay.isDraft === 1);
+            })
+            .catch(err => console.error('加载文章失败', err));
+    }, [id, authReady, vditor]);
 
     const titleRef = useRef(null);
 
