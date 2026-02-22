@@ -5,6 +5,7 @@ import COS from 'cos-js-sdk-v5';
 import './index.css'
 import {useNavigate, useParams} from "react-router-dom";
 import Tag from "./Tag";
+import moment from "moment";
 
 
 const cos = new COS({
@@ -16,6 +17,7 @@ const cos = new COS({
 const Editor = () => {
     const [vditor, setVditor] = useState<Vditor>();
     const [initialTags, setInitialTags] = useState<any[]>([]);
+    const [articleCreateTime, setArticleCreateTime] = useState<number>(0);
     const navigate = useNavigate();
     const {id} = useParams<{id?: string}>();
     const tagRef = useRef<any>(null);
@@ -50,6 +52,9 @@ const Editor = () => {
                             }
                             if (essay.tags && essay.tags.length > 0) {
                                 setInitialTags(essay.tags);
+                            }
+                            if (essay.createTime) {
+                                setArticleCreateTime(essay.createTime);
                             }
                         })
                         .catch(err => console.error('加载文章失败', err));
@@ -164,10 +169,11 @@ const Editor = () => {
             body: JSON.stringify({essayId, tagIds})
         });
 
-        vditor.clearCache();
-        vditor.setValue('');
+        const yearMonth = id
+            ? moment(articleCreateTime).format("YYYY/MM")
+            : moment().format("YYYY/MM");
         showToast(id ? '更新文章成功' : '发布文章成功');
-        setTimeout(() => navigate('/essay', {replace: true}), 1200);
+        setTimeout(() => navigate(`/essay/${yearMonth}/${essayId}`, {replace: true}), 800);
     }
 
     return (

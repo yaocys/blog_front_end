@@ -9,23 +9,28 @@ interface Tag {
     color: string;
 }
 
-function TagCard(props: {tag: Tag}) {
-    const {tag} = props;
+const COLOR_MAP: Record<string, string> = {
+    primary:   '#0d6efd',
+    secondary: '#6c757d',
+    success:   '#198754',
+    danger:    '#dc3545',
+    warning:   '#e6a817',
+    info:      '#0aa2c0',
+    dark:      '#343a40',
+    light:     '#adb5bd',
+};
+
+function TagCard({tag}: {tag: Tag}) {
+    const accent = COLOR_MAP[tag.color] ?? '#6c757d';
     return (
-        <div className="col-sm-4 mb-3 mb-sm-0">
-            <div className="card">
-                <div className="card-body">
-                    <h5 className="card-title">
-                        <span className={`badge bg-${tag.color}-subtle`} style={{color: '#2d3436'}}>
-                            {tag.name}
-                        </span>
-                    </h5>
-                    <p className="card-text text-muted">{tag.description}</p>
-                    <Link to={`/essay?tag=${tag.id}&tagName=${encodeURIComponent(tag.name)}&tagColor=${tag.color}`}
-                          className="btn btn-outline-primary btn-sm">查看</Link>
-                </div>
-            </div>
-        </div>
+        <Link
+            to={`/essay?tag=${tag.id}&tagName=${encodeURIComponent(tag.name)}&tagColor=${tag.color}`}
+            className="archive-card"
+            style={{'--accent': accent} as React.CSSProperties}
+        >
+            <span className="archive-card-name">{tag.name}</span>
+            {tag.description && <p className="archive-card-desc">{tag.description}</p>}
+        </Link>
     );
 }
 
@@ -43,36 +48,25 @@ function Archive() {
 
     if (loading) {
         return (
-            <div className="row placeholder-glow" style={{color: '#d0d5db'}}>
+            <div className="archive-grid placeholder-glow" style={{color: '#d0d5db'}}>
                 {Array.from({length: 6}).map((_, i) => (
-                    <div key={i} className="col-sm-4 mb-3">
-                        <div className="card">
-                            <div className="card-body">
-                                <h5 className="card-title">
-                                    <span className="placeholder rounded" style={{display: 'inline-block', width: '40%'}}></span>
-                                </h5>
-                                <p className="card-text">
-                                    <span className="placeholder" style={{display: 'inline-block', width: `${55 + (i % 3) * 10}%`}}></span>
-                                    <br/>
-                                    <span className="placeholder" style={{display: 'inline-block', width: `${35 + (i % 4) * 8}%`}}></span>
-                                </p>
-                                <span className="placeholder rounded" style={{display: 'inline-block', width: '28%', height: '30px'}}></span>
-                            </div>
-                        </div>
+                    <div key={i} className="archive-card archive-card-skeleton">
+                        <span className="placeholder rounded" style={{display: 'block', width: '45%', height: '1rem', marginBottom: '0.6rem'}}></span>
+                        <span className="placeholder rounded" style={{display: 'block', width: `${55 + (i % 3) * 10}%`, height: '0.8rem'}}></span>
+                        <span className="placeholder rounded" style={{display: 'block', width: `${30 + (i % 4) * 8}%`, height: '0.8rem', marginTop: '0.3rem'}}></span>
                     </div>
                 ))}
             </div>
         );
     }
 
+    if (tags.length === 0) {
+        return <p className="text-muted">暂无标签</p>;
+    }
+
     return (
-        <div className="row">
-            {tags.map(tag => (
-                <TagCard key={tag.id} tag={tag}/>
-            ))}
-            {tags.length === 0 && (
-                <p className="text-muted">暂无标签</p>
-            )}
+        <div className="archive-grid">
+            {tags.map(tag => <TagCard key={tag.id} tag={tag}/>)}
         </div>
     );
 }
