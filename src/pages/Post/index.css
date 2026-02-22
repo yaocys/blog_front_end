@@ -8,21 +8,6 @@
     text-decoration: none;
 }
 
-#essay .vditor-anchor svg {
-    visibility: visible;
-    opacity: 0.25;
-    transition: opacity 0.2s;
-}
-
-#essay h1:hover .vditor-anchor svg,
-#essay h2:hover .vditor-anchor svg,
-#essay h3:hover .vditor-anchor svg,
-#essay h4:hover .vditor-anchor svg,
-#essay h5:hover .vditor-anchor svg,
-#essay h6:hover .vditor-anchor svg,
-#essay .vditor-anchor:hover svg {
-    opacity: 1;
-}
 
 #essay {
     font-size: 16px;
