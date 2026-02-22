@@ -18,6 +18,7 @@ const Editor = () => {
     const [vditor, setVditor] = useState<Vditor>();
     const [initialTags, setInitialTags] = useState<any[]>([]);
     const [articleCreateTime, setArticleCreateTime] = useState<number>(0);
+    const [authReady, setAuthReady] = useState(false);
     const navigate = useNavigate();
     const {id} = useParams<{id?: string}>();
     const tagRef = useRef<any>(null);
@@ -26,12 +27,14 @@ const Editor = () => {
     useEffect(() => {
         fetch('/api1/auth/check', {credentials: 'include'})
             .then(r => {
-                if (!r.ok) navigate('/auth', {replace: true});
+                if (r.ok) setAuthReady(true);
+                else navigate('/auth', {replace: true});
             })
             .catch(() => navigate('/auth', {replace: true}));
     }, [navigate]);
 
     useEffect(() => {
+        if (!authReady) return;
         // 配置Vditor编辑器
         const vditorInstance = new Vditor("vditor", {
             height: 'calc(55vh)',
@@ -93,7 +96,7 @@ const Editor = () => {
                 }
             }
         });
-    }, []);
+    }, [authReady]);
 
     const titleRef = useRef(null);
 
@@ -179,6 +182,8 @@ const Editor = () => {
         showToast(id ? '更新文章成功' : '发布文章成功');
         setTimeout(() => navigate(`/essay/${yearMonth}/${essayId}`, {replace: true}), 800);
     }
+
+    if (!authReady) return null;
 
     return (
         <>
