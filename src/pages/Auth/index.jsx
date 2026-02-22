@@ -18,45 +18,7 @@ const Auth = () => {
             .catch(() => {});
     }, [navigate]);
 
-    const getCode = () => digits.join('');
-
-    const handleChange = (index, value) => {
-        if (!/^\d?$/.test(value)) return;
-        const next = [...digits];
-        next[index] = value;
-        setDigits(next);
-        // 自动移到下一格
-        if (value && index < 5) {
-            inputRefs.current[index + 1]?.focus();
-        }
-    };
-
-    const handleKeyDown = (index, e) => {
-        if (e.key === 'Backspace' && !digits[index] && index > 0) {
-            inputRefs.current[index - 1]?.focus();
-        }
-        if (e.key === 'Enter') handleSubmit();
-    };
-
-    const handlePaste = (e) => {
-        e.preventDefault();
-        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-        const next = [...digits];
-        for (let i = 0; i < 6; i++) {
-            next[i] = pasted[i] ?? '';
-        }
-        setDigits(next);
-        const focusIdx = Math.min(pasted.length, 5);
-        inputRefs.current[focusIdx]?.focus();
-    };
-
-    const handleSubmit = async () => {
-        const code = getCode();
-        if (code.length !== 6) {
-            setErrMsg('请输入完整的6位验证码');
-            setStatus('error');
-            return;
-        }
+    const doSubmit = async (code) => {
         setStatus('loading');
         setErrMsg('');
         try {
@@ -78,6 +40,48 @@ const Auth = () => {
         } catch {
             setErrMsg('网络错误，请重试');
             setStatus('error');
+        }
+    };
+
+    const handleChange = (index, value) => {
+        if (!/^\d?$/.test(value)) return;
+        const next = [...digits];
+        next[index] = value;
+        setDigits(next);
+        if (status === 'error') setStatus('idle');
+        // 自动移到下一格
+        if (value && index < 5) {
+            inputRefs.current[index + 1]?.focus();
+        }
+        // 第6位填入时自动提交
+        if (value && index === 5 && next.every(d => d !== '')) {
+            doSubmit(next.join(''));
+        }
+    };
+
+    const handleKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !digits[index] && index > 0) {
+            inputRefs.current[index - 1]?.focus();
+        }
+        if (e.key === 'Enter') {
+            const code = digits.join('');
+            if (code.length === 6) doSubmit(code);
+        }
+    };
+
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        const next = [...digits];
+        for (let i = 0; i < 6; i++) {
+            next[i] = pasted[i] ?? '';
+        }
+        setDigits(next);
+        const focusIdx = Math.min(pasted.length, 5);
+        inputRefs.current[focusIdx]?.focus();
+        // 粘贴满6位时自动提交
+        if (pasted.length === 6) {
+            doSubmit(pasted);
         }
     };
 
@@ -109,13 +113,9 @@ const Auth = () => {
                     <p className="auth-err">{errMsg}</p>
                 )}
 
-                <button
-                    className="auth-btn"
-                    onClick={handleSubmit}
-                    disabled={status === 'loading'}
-                >
-                    {status === 'loading' ? '验证中…' : '验 证'}
-                </button>
+                {status === 'loading' && (
+                    <p className="auth-loading">验证中…</p>
+                )}
             </div>
         </div>
     );

@@ -74,28 +74,11 @@
 .auth-err {
     color: #e05252;
     font-size: 0.82rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-.auth-btn {
-    width: 100%;
-    padding: 0.65rem;
-    background: #5a9cf5;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
-}
-
-.auth-btn:hover:not(:disabled) {
-    background: #3b82f6;
-}
-
-.auth-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.auth-loading {
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
 }
