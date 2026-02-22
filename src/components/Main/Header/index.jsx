@@ -14,7 +14,7 @@ function Header(props){
 
     let label = null;
     navTags.map((navTag)=>{
-        if(pathname===navTag.link) label = navTag.label;
+        if(pathname === navTag.link || pathname.startsWith(navTag.link + '/')) label = navTag.label;
         return navTag;
     })
 

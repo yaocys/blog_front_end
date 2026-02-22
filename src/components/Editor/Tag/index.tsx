@@ -101,6 +101,18 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
         }).catch(() => alert('创建失败'));
     };
 
+    const handleDeleteTag = (tag: Tag) => {
+        if (!window.confirm(`确认删除标签「${tag.name}」？删除后不可恢复。`)) return;
+        fetch(`/api1/tag/deleteTag?id=${tag.id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+        }).then(r => {
+            if (!r.ok) { alert('删除失败'); return; }
+            setAllTags(prev => prev.filter(t => t.id !== tag.id));
+            setSelectedTags(prev => prev.filter(t => t.id !== tag.id));
+        }).catch(() => alert('删除失败'));
+    };
+
     const handleUpdateTag = () => {
         if (!tagForm.name.trim()) { alert('标签名不能为空'); return; }
         fetch('/api1/tag/updateTag', {
@@ -139,6 +151,8 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
                                             setTagForm({id: tag.id, name: tag.name, description: tag.description || '', color: tag.color});
                                             setModalView('edit');
                                         }}>编辑</button>
+                                <button className="btn btn-sm btn-outline-danger me-2"
+                                        onClick={() => handleDeleteTag(tag)}>删除</button>
                                 <button className="btn btn-sm btn-outline-primary"
                                         onClick={() => addTag(tag)}>添加</button>
                             </div>

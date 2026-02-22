@@ -81,10 +81,20 @@ const Editor = () => {
         });
     }, [authReady]);
 
-    // 编辑模式：当 id / vditor 就绪时加载文章（独立 effect，
-    // 保证从 /backstage 导航到 /backstage/:id 时也能重新 fetch）
+    // 根据 id 切换模式：无 id 清空（新建），有 id 加载文章（编辑）
     useEffect(() => {
-        if (!authReady || !id || !vditor) return;
+        if (!authReady || !vditor) return;
+        if (!id) {
+            // 新建模式：清空所有状态
+            vditor.setValue('');
+            if (titleRef.current) {
+                (titleRef.current as HTMLInputElement).value = '';
+            }
+            setInitialTags([]);
+            setIsDraft(false);
+            setArticleCreateTime(0);
+            return;
+        }
         fetch(`/api1/essay/selectOne?id=${id}`, {credentials: 'include'})
             .then(r => r.json())
             .then(essay => {
