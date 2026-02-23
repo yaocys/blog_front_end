@@ -45,32 +45,33 @@ function Item({essay, isAuth, onDelete}) {
                 </span>
                     <span className="essay-date">{moment(essay.createTime).format("MM-DD")}</span>
                 </div>
-                {isAuth === true && (
-                    <div className="col-2 d-flex">
-                        <div className="col-6 text-center">
-                            <div style={{display: mouseHover ? '' : 'none'}}>
-                                <Link to={`/backstage/${essay.id}`} className="text-info">编辑</Link>
+                <div className="col-2 d-flex">
+                    {isAuth && (
+                        <>
+                            <div className="col-6 text-center">
+                                <div style={{display: mouseHover ? '' : 'none'}}>
+                                    <Link to={`/backstage/${essay.id}`} className="text-info">编辑</Link>
+                                </div>
                             </div>
-                        </div>
-                        <div className="col-6 text-center">
-                            <div style={{display: mouseHover ? '' : 'none'}}>
-                                <button
-                                    onClick={handleDelete}
-                                    className="text-danger"
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        padding: 0,
-                                        cursor: 'pointer',
-                                        font: 'inherit'
-                                    }}
-                                >删除
-                                </button>
+                            <div className="col-6 text-center">
+                                <div style={{display: mouseHover ? '' : 'none'}}>
+                                    <button
+                                        onClick={handleDelete}
+                                        className="text-danger"
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                            font: 'inherit'
+                                        }}
+                                    >删除
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                )}
-                {/*<div className="col-2"/>*/}
+                        </>
+                    )}
+                </div>
             </div>
 
             {showConfirm && (
@@ -93,9 +94,11 @@ function Item({essay, isAuth, onDelete}) {
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" className="btn btn-outline-secondary btn-sm"
-                                            onClick={() => setShowConfirm(false)}>取消</button>
+                                            onClick={() => setShowConfirm(false)}>取消
+                                    </button>
                                     <button type="button" className="btn btn-danger btn-sm"
-                                            onClick={doDelete}>确认删除</button>
+                                            onClick={doDelete}>确认删除
+                                    </button>
                                 </div>
                             </div>
                         </div>
