@@ -12,7 +12,7 @@ interface TagHandle {
     getSelectedTagIds: () => string[];
 }
 
-type ModalView = 'list' | 'new' | 'edit';
+type ModalView = 'list' | 'new' | 'edit' | 'confirm-delete';
 
 const COLORS = ['primary', 'success', 'danger', 'warning', 'info'];
 
@@ -30,6 +30,9 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
     const [search, setSearch] = useState('');
     const [modalView, setModalView] = useState<ModalView>('list');
     const [tagForm, setTagForm] = useState(emptyForm);
+    const [deleteTargetTag, setDeleteTargetTag] = useState<Tag | null>(null);
+    const [formError, setFormError] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const modalRef = useRef<HTMLDivElement>(null);
     const bsModalRef = useRef<any>(null);
@@ -87,47 +90,65 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
     );
 
     const handleSaveNewTag = () => {
-        if (!tagForm.name.trim()) { alert('标签名不能为空'); return; }
+        if (!tagForm.name.trim()) { setFormError('标签名不能为空'); return; }
         fetch('/api1/tag/saveTag', {
             method: 'POST',
             credentials: 'include',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({name: tagForm.name, description: tagForm.description, color: tagForm.color})
         }).then(r => {
-            if (!r.ok) { alert('创建失败'); return; }
+            if (!r.ok) { setFormError('创建失败'); return; }
             loadAllTags();
             setTagForm(emptyForm);
-            setModalView('list');  // 直接切换视图，modal 保持打开，无遮罩层问题
-        }).catch(() => alert('创建失败'));
+            setFormError(null);
+            setModalView('list');
+        }).catch(() => setFormError('创建失败'));
     };
 
     const handleDeleteTag = (tag: Tag) => {
-        if (!window.confirm(`确认删除标签「${tag.name}」？删除后不可恢复。`)) return;
-        fetch(`/api1/tag/deleteTag?id=${tag.id}`, {
+        setDeleteTargetTag(tag);
+        setDeleteError(null);
+        setModalView('confirm-delete');
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTargetTag) return;
+        fetch(`/api1/tag/deleteTag?id=${deleteTargetTag.id}`, {
             method: 'DELETE',
             credentials: 'include',
-        }).then(r => {
-            if (!r.ok) { alert('删除失败'); return; }
-            setAllTags(prev => prev.filter(t => t.id !== tag.id));
-            setSelectedTags(prev => prev.filter(t => t.id !== tag.id));
-        }).catch(() => alert('删除失败'));
+        }).then(async r => {
+            if (r.status === 400) {
+                const msg = await r.text();
+                setDeleteError(msg);
+                return;
+            }
+            if (!r.ok) {
+                setDeleteError('删除失败，请重试');
+                return;
+            }
+            setAllTags(prev => prev.filter(t => t.id !== deleteTargetTag.id));
+            setSelectedTags(prev => prev.filter(t => t.id !== deleteTargetTag.id));
+            setDeleteTargetTag(null);
+            setModalView('list');
+        }).catch(() => setDeleteError('删除失败，请重试'));
     };
 
     const handleUpdateTag = () => {
-        if (!tagForm.name.trim()) { alert('标签名不能为空'); return; }
+        if (!tagForm.name.trim()) { setFormError('标签名不能为空'); return; }
         fetch('/api1/tag/updateTag', {
             method: 'PUT',
             credentials: 'include',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id: tagForm.id, name: tagForm.name, description: tagForm.description, color: tagForm.color})
         }).then(r => {
-            if (!r.ok) { alert('更新失败'); return; }
+            if (!r.ok) { setFormError('更新失败'); return; }
             loadAllTags();
             setSelectedTags(prev => prev.map(t => t.id === tagForm.id
                 ? {...t, name: tagForm.name, description: tagForm.description, color: tagForm.color}
                 : t));
+            setFormError(null);
             setModalView('list');
-        }).catch(() => alert('更新失败'));
+        }).catch(() => setFormError('更新失败'));
     };
 
     const renderListView = () => (
@@ -149,6 +170,7 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
                                 <button className="btn btn-sm btn-outline-secondary me-2"
                                         onClick={() => {
                                             setTagForm({id: tag.id, name: tag.name, description: tag.description || '', color: tag.color});
+                                            setFormError(null);
                                             setModalView('edit');
                                         }}>编辑</button>
                                 <button className="btn btn-sm btn-outline-danger me-2"
@@ -166,7 +188,7 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
             <div className="modal-footer">
                 <button type="button" className="btn btn-outline-secondary btn-sm" onClick={hideModal}>关闭</button>
                 <button className="btn btn-outline-success btn-sm"
-                        onClick={() => { setTagForm(emptyForm); setModalView('new'); }}>新建标签</button>
+                        onClick={() => { setTagForm(emptyForm); setFormError(null); setModalView('new'); }}>新建标签</button>
             </div>
         </>
     );
@@ -180,6 +202,7 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
                     <button type="button" className="btn-close" onClick={hideModal} aria-label="Close"/>
                 </div>
                 <div className="modal-body">
+                    {formError && <div className="alert alert-danger py-2">{formError}</div>}
                     <form>
                         <div className="mb-3">
                             <label className="col-form-label">标签名：</label>
@@ -202,7 +225,7 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
                 </div>
                 <div className="modal-footer">
                     <button type="button" className="btn btn-outline-secondary btn-sm"
-                            onClick={() => setModalView('list')}>取消</button>
+                            onClick={() => { setFormError(null); setModalView('list'); }}>取消</button>
                     <button className="btn btn-outline-warning btn-sm"
                             onClick={isEdit ? handleUpdateTag : handleSaveNewTag}>
                         {isEdit ? '保存' : '创建'}
@@ -211,6 +234,24 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
             </>
         );
     };
+
+    const renderConfirmDeleteView = () => (
+        <>
+            <div className="modal-header">
+                <h1 className="modal-title fs-5">确认删除</h1>
+                <button type="button" className="btn-close" onClick={hideModal} aria-label="Close"/>
+            </div>
+            <div className="modal-body">
+                {deleteError && <div className="alert alert-danger py-2">{deleteError}</div>}
+                <p>确认删除标签「<strong>{deleteTargetTag?.name}</strong>」？删除后不可恢复。</p>
+            </div>
+            <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary btn-sm"
+                        onClick={() => setModalView('list')}>取消</button>
+                <button className="btn btn-danger btn-sm" onClick={confirmDelete}>确认删除</button>
+            </div>
+        </>
+    );
 
     return (
         <div className="align-content-end w-100" style={{marginBottom: '0.5em'}}>
@@ -226,7 +267,12 @@ const Tag = forwardRef<TagHandle, {initialTags?: Tag[]}>(function Tag({initialTa
             <div className="modal fade" ref={modalRef} tabIndex={-1}>
                 <div className="modal-dialog modal-dialog-centered modal-lg">
                     <div className="modal-content">
-                        {modalView === 'list' ? renderListView() : renderFormView()}
+                        {modalView === 'confirm-delete'
+                            ? renderConfirmDeleteView()
+                            : modalView === 'list'
+                                ? renderListView()
+                                : renderFormView()
+                        }
                     </div>
                 </div>
             </div>

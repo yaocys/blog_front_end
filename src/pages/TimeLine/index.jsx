@@ -8,52 +8,101 @@ const PAGE_SIZE = 10;
 
 function Item({essay, isAuth, onDelete}) {
     const [mouseHover, setMouseHover] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
 
     const handleDelete = () => {
-        if (!window.confirm(`确认删除「${essay.title}」？`)) return;
+        setDeleteError(null);
+        setShowConfirm(true);
+    };
+
+    const doDelete = () => {
         fetch(`/api1/essay/deleteEssay?id=${essay.id}`, {
             method: 'DELETE',
             credentials: 'include'
         }).then(r => {
-            if (r.ok) onDelete(essay.id);
-            else alert('删除失败');
-        }).catch(() => alert('删除失败'));
+            if (r.ok) {
+                setShowConfirm(false);
+                onDelete(essay.id);
+            } else {
+                setDeleteError('删除失败，请重试');
+            }
+        }).catch(() => setDeleteError('删除失败，请重试'));
     };
 
     return (
-        <div className="row align-items-center timeline-row"
-             onMouseEnter={() => setMouseHover(true)}
-             onMouseLeave={() => setMouseHover(false)}>
-            <div className="col-2"/>
-            <div className="col d-flex justify-content-between align-items-center gap-3">
+        <>
+            <div className="row align-items-center timeline-row"
+                 onMouseEnter={() => setMouseHover(true)}
+                 onMouseLeave={() => setMouseHover(false)}>
+                <div className="col-2"/>
+                <div className="col d-flex justify-content-between align-items-center gap-3">
                 <span className="d-flex align-items-center gap-2">
                     <Link to={`${moment(essay.createTime).format("YYYY/MM")}/${essay.id}`}>{essay.title}</Link>
                     {isAuth === true && essay.isDraft === 1 && (
-                        <span className="badge bg-secondary" style={{fontSize: '0.7em'}}>草稿</span>
+                        <span className="badge rounded-pill bg-secondary" style={{fontSize: '0.7em'}}>草稿</span>
                     )}
                 </span>
-                <span className="essay-date">{moment(essay.createTime).format("MM-DD")}</span>
-            </div>
-            {isAuth === true && (
-                <div className="col-2 d-flex">
-                    <div className="col-6 text-center" >
-                        <div style={{display: mouseHover ? '' : 'none'}}>
-                            <Link to={`/backstage/${essay.id}`} className="text-info">编辑</Link>
-                        </div>
-                    </div>
-                    <div className="col-6 text-center">
-                        <div style={{display: mouseHover ? '' : 'none'}}>
-                            <button
-                                onClick={handleDelete}
-                                className="text-danger"
-                                style={{background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit'}}
-                            >删除</button>
-                        </div>
-                    </div>
+                    <span className="essay-date">{moment(essay.createTime).format("MM-DD")}</span>
                 </div>
+                {isAuth === true && (
+                    <div className="col-2 d-flex">
+                        <div className="col-6 text-center">
+                            <div style={{display: mouseHover ? '' : 'none'}}>
+                                <Link to={`/backstage/${essay.id}`} className="text-info">编辑</Link>
+                            </div>
+                        </div>
+                        <div className="col-6 text-center">
+                            <div style={{display: mouseHover ? '' : 'none'}}>
+                                <button
+                                    onClick={handleDelete}
+                                    className="text-danger"
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        cursor: 'pointer',
+                                        font: 'inherit'
+                                    }}
+                                >删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/*<div className="col-2"/>*/}
+            </div>
+
+            {showConfirm && (
+                <>
+                    <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1040}}
+                         onClick={() => setShowConfirm(false)}/>
+                    <div className="modal show d-block" style={{zIndex: 1050}} tabIndex={-1}>
+                        <div className="modal-dialog modal-dialog-centered">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">确认删除</h5>
+                                    <button type="button" className="btn-close"
+                                            onClick={() => setShowConfirm(false)} aria-label="Close"/>
+                                </div>
+                                <div className="modal-body">
+                                    {deleteError && (
+                                        <div className="alert alert-danger py-2">{deleteError}</div>
+                                    )}
+                                    <p>确认删除「<strong>{essay.title}</strong>」？</p>
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-outline-secondary btn-sm"
+                                            onClick={() => setShowConfirm(false)}>取消</button>
+                                    <button type="button" className="btn btn-danger btn-sm"
+                                            onClick={doDelete}>确认删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
             )}
-            {/*<div className="col-2"/>*/}
-        </div>
+        </>
     );
 }
 
@@ -113,7 +162,10 @@ function TimeLine() {
     let currentYear = '';
     const displayList = essayList.map((essay) => {
         const y = moment(essay.createTime).format("YYYY");
-        if (currentYear !== y) { currentYear = y; return {...essay, showYear: true}; }
+        if (currentYear !== y) {
+            currentYear = y;
+            return {...essay, showYear: true};
+        }
         return {...essay, showYear: false};
     });
 

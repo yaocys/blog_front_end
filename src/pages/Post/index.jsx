@@ -52,8 +52,7 @@ function Post() {
                     </td>
                     <td style={{fontSize: "small", textAlign: "end"}} className="border-bottom border-success-subtle border-2">
                         <div><i className="bi bi-calendar-event"/>&nbsp;{moment(essay && essay.createTime).format("YYYY-MM-DD")}</div>
-                        <div><i className="bi bi-eye"></i>&nbsp;浏览量:{essay && essay.views}</div>
-                        {isAuth === true && (
+{isAuth === true && (
                             <div style={{marginTop: '0.3em'}}>
                                 <Link to={`/backstage/${param.id}`} className="btn btn-sm btn-outline-secondary">编辑</Link>
                             </div>

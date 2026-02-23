@@ -20,6 +20,7 @@ const Editor = () => {
     const [articleCreateTime, setArticleCreateTime] = useState<number>(0);
     const [authReady, setAuthReady] = useState(false);
     const [isDraft, setIsDraft] = useState(false);
+    const [toastType, setToastType] = useState<'success' | 'danger'>('success');
     const navigate = useNavigate();
     const {id} = useParams<{id?: string}>();
     const tagRef = useRef<any>(null);
@@ -115,14 +116,18 @@ const Editor = () => {
 
     const titleRef = useRef(null);
 
-    const showToast = (message: string) => {
-        const toastEl = document.getElementById('editor-success-toast');
-        if (toastEl) {
-            const msgEl = document.getElementById('editor-toast-body');
-            if (msgEl) msgEl.textContent = message;
-            const toast = new (window as any).bootstrap.Toast(toastEl, {delay: 2000});
-            toast.show();
-        }
+    const showToast = (message: string, type: 'success' | 'danger' = 'success') => {
+        setToastType(type);
+        // 等待 state 更新后再显示 Toast
+        setTimeout(() => {
+            const toastEl = document.getElementById('editor-success-toast');
+            if (toastEl) {
+                const msgEl = document.getElementById('editor-toast-body');
+                if (msgEl) msgEl.textContent = message;
+                const toast = new (window as any).bootstrap.Toast(toastEl, {delay: 2000});
+                toast.show();
+            }
+        }, 0);
     };
 
     const handleCancel = () => {
@@ -131,12 +136,12 @@ const Editor = () => {
 
     const Release = async (title: any, vditor: Vditor) => {
         if (!title || !title.value || !title.value.trim()) {
-            alert('标题不能为空！');
+            showToast('标题不能为空！', 'danger');
             return;
         }
         const md = vditor.getValue();
         if (!md || !md.trim()) {
-            alert("文本内容为空！");
+            showToast('文本内容为空！', 'danger');
             return;
         }
 
@@ -151,13 +156,13 @@ const Editor = () => {
                 body: JSON.stringify({id, title: title.value, content: md, isDraft: 0})
             });
             if (response.status === 401) {
-                alert('登录已过期，请重新验证');
+                showToast('登录已过期，请重新验证', 'danger');
                 navigate('/auth', {replace: true});
                 return;
             }
             if (!response.ok) {
                 const msg = await response.text();
-                alert(msg || '更新失败，请稍后重试');
+                showToast(msg || '更新失败，请稍后重试', 'danger');
                 return;
             }
             essayId = id;
@@ -170,13 +175,13 @@ const Editor = () => {
                 body: JSON.stringify({title: title.value, content: md, isDraft: 0})
             });
             if (response.status === 401) {
-                alert('登录已过期，请重新验证');
+                showToast('登录已过期，请重新验证', 'danger');
                 navigate('/auth', {replace: true});
                 return;
             }
             if (!response.ok) {
                 const msg = await response.text();
-                alert(msg || '发布失败，请稍后重试');
+                showToast(msg || '发布失败，请稍后重试', 'danger');
                 return;
             }
             essayId = await response.text();
@@ -200,7 +205,7 @@ const Editor = () => {
 
     const saveDraft = async (title: any, vditor: Vditor) => {
         if (!title || !title.value || !title.value.trim()) {
-            alert('标题不能为空！');
+            showToast('标题不能为空！', 'danger');
             return;
         }
         const md = vditor.getValue();
@@ -214,13 +219,13 @@ const Editor = () => {
                 body: JSON.stringify({id, title: title.value, content: md, isDraft: 1})
             });
             if (response.status === 401) {
-                alert('登录已过期，请重新验证');
+                showToast('登录已过期，请重新验证', 'danger');
                 navigate('/auth', {replace: true});
                 return;
             }
             if (!response.ok) {
                 const msg = await response.text();
-                alert(msg || '保存草稿失败');
+                showToast(msg || '保存草稿失败', 'danger');
                 return;
             }
             setIsDraft(true);
@@ -234,13 +239,13 @@ const Editor = () => {
                 body: JSON.stringify({title: title.value, content: md, isDraft: 1})
             });
             if (response.status === 401) {
-                alert('登录已过期，请重新验证');
+                showToast('登录已过期，请重新验证', 'danger');
                 navigate('/auth', {replace: true});
                 return;
             }
             if (!response.ok) {
                 const msg = await response.text();
-                alert(msg || '保存草稿失败');
+                showToast(msg || '保存草稿失败', 'danger');
                 return;
             }
             const essayId = await response.text();
@@ -286,7 +291,7 @@ const Editor = () => {
             <div id="vditor" className="vditor"/>
 
             <div className="toast-container position-fixed top-0 start-50 translate-middle-x pt-3" style={{zIndex: 1100}}>
-                <div id="editor-success-toast" className="toast align-items-center text-bg-success border-0"
+                <div id="editor-success-toast" className={`toast align-items-center text-bg-${toastType} border-0`}
                      role="alert" aria-live="assertive" aria-atomic="true">
                     <div className="d-flex">
                         <div className="toast-body" id="editor-toast-body"></div>
