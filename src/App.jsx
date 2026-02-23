@@ -6,16 +6,21 @@ import {GlobalScrollbar} from 'mac-scrollbar';
 import 'mac-scrollbar/dist/mac-scrollbar.css';
 import NavBar from "./pages/NavBar";
 import {OutlineContext} from "./context/OutlineContext";
+import {useAuth} from "./hooks/useAuth";
 
 function App() {
 
-    const navTags = [
+    const isAuth = useAuth();
+
+    const baseNavTags = [
         {id: 0, label: "随笔", link: "/essay"},
         {id: 1, label: "归档", link: "/archive"},
         {id: 2, label: "关于", link: "/about"},
         {id: 3, label: "链接", link: "/link"},
-        {id: 4, label: "后台", link: "/backstage"}
-    ]
+    ];
+    const navTags = isAuth === true
+        ? [...baseNavTags, {id: 4, label: "后台", link: "/backstage"}]
+        : baseNavTags;
 
     const [outline, setOutline] = useState([]);
 
